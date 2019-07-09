@@ -41,11 +41,15 @@ func (c Client) CopyObjectWithProgress(dst DestinationInfo, src SourceInfo, prog
 
 	var err error
 	var size int64
+	var contentType string
 	// If progress bar is specified, size should be requested as well initiate a StatObject request.
-	if progress != nil {
-		size, _, _, err = src.getProps(c)
+	if progress != nil || dst.userMetadata != nil {
+		size, _, contentType, _, err = src.getProps(c)
 		if err != nil {
 			return err
+		}
+		if _, ok := header["Content-Type"]; !ok {
+			header.Set("Content-Type", contentType)
 		}
 	}
 

@@ -193,7 +193,7 @@ func (s *SourceInfo) SetUnmodifiedSinceCond(modTime time.Time) error {
 }
 
 // Helper to fetch size and etag of an object using a StatObject call.
-func (s *SourceInfo) getProps(c Client) (size int64, etag string, userMeta map[string]string, err error) {
+func (s *SourceInfo) getProps(c Client) (size int64, etag, contentType string, userMeta map[string]string, err error) {
 	// Get object info - need size and etag here. Also, decryption
 	// headers are added to the stat request if given.
 	var objInfo ObjectInfo
@@ -204,6 +204,8 @@ func (s *SourceInfo) getProps(c Client) (size int64, etag string, userMeta map[s
 	} else {
 		size = objInfo.Size
 		etag = objInfo.ETag
+		contentType = objInfo.ContentType
+
 		userMeta = make(map[string]string)
 		for k, v := range objInfo.Metadata {
 			if strings.HasPrefix(k, "x-amz-meta-") {
@@ -365,7 +367,7 @@ func (c Client) ComposeObjectWithProgress(dst DestinationInfo, srcs []SourceInfo
 	etags := make([]string, len(srcs))
 	var err error
 	for i, src := range srcs {
-		size, etags[i], srcUserMeta, err = src.getProps(c)
+		size, etags[i], _, srcUserMeta, err = src.getProps(c)
 		if err != nil {
 			return err
 		}
